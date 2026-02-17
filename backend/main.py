@@ -18,6 +18,12 @@ class Hospital(SQLModel, table=True):
     wait: int
     trend: int
 
+class SpecialtyData(SQLModel, table=True):
+    id: Optional[int] = Field(default=None, primary_key=True)
+    hospital_id: int = Field(foreign_key="hospital.id")
+    specialty_id: str
+    wait: int
+
 # --- Database ---
 sqlite_file_name = "data/saniradar.db"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
@@ -36,14 +42,14 @@ def get_session():
         yield session
 
 # --- App ---
-app = FastAPI(title="SaniRadar API", version="0.2.1")
+app = FastAPI(title="SaniRadar API", version="0.2.2")
 
 PROVINCES = [
     "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", 
     "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "A Coruña", "Cuenca", "Girona", "Granada", 
-    "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Jaén", "León", "Lleida", "Lugo", "Madrid", 
-    "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Pontevedra", "La Rioja", "Salamanca", 
-    "Segovia", "Sevilla", "Soria", "Tarragona", "Santa Cruz de Tenerife", "Teruel", "Toledo", "Valencia", 
+    "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Ibiza", "Menorca", "Formentera", "Jaén", "León", "Lleida", "Lugo", "Madrid", 
+    "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Lanzarote", "Fuerteventura", "Pontevedra", "La Rioja", "Salamanca", 
+    "Segovia", "Sevilla", "Soria", "Tarragona", "Santa Cruz de Tenerife", "La Palma", "La Gomera", "El Hierro", "Teruel", "Toledo", "Valencia", 
     "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
 ]
 
@@ -103,11 +109,15 @@ def on_startup():
     with Session(engine) as session:
         statement = select(Hospital)
         results = session.exec(statement).all()
-        # Si hay pocos hospitales (menos de 50), limpiamos y re-poblamos para asegurar cobertura total
-        if len(results) < 50:
+        # Si hay pocos hospitales (menos de 70), limpiamos y re-poblamos para asegurar cobertura total
+        if len(results) < 70:
             # Eliminar antiguos para evitar duplicados en el re-seed
             for h in results:
                 session.delete(h)
+            # También limpiar especialidades viejas
+            old_specialties = session.exec(select(SpecialtyData)).all()
+            for s in old_specialties:
+                session.delete(s)
             session.commit()
             
             seed_data = [
@@ -131,10 +141,18 @@ def on_startup():
 
                 # Baleares
                 Hospital(name_es="Hosp. Son Espases", name_en="Son Espases Hospital", city="Islas Baleares", lat=39.6083, lng=2.6394, wait=92, trend=4),
+                Hospital(name_es="Hosp. Can Misses", name_en="Can Misses Hospital", city="Ibiza", lat=38.9189, lng=1.4239, wait=110, trend=5), # Ibiza
+                Hospital(name_es="Hosp. Mateu Orfila", name_en="Mateu Orfila Hospital", city="Menorca", lat=39.8864, lng=4.2514, wait=85, trend=2), # Menorca
+                Hospital(name_es="Hosp. de Formentera", name_en="Formentera Hospital", city="Formentera", lat=38.7064, lng=1.4425, wait=70, trend=-1),
 
                 # Canarias
                 Hospital(name_es="Hosp. Dr. Negrín", name_en="Dr. Negrin Hospital", city="Las Palmas", lat=28.1256, lng=-15.4475, wait=140, trend=8),
                 Hospital(name_es="Hosp. Univ. de Canarias", name_en="Canary Islands Univ. Hospital", city="Santa Cruz de Tenerife", lat=28.4552, lng=-16.2847, wait=135, trend=10),
+                Hospital(name_es="Hosp. Dr. José Molina Orosa", name_en="Dr. Jose Molina Orosa Hospital", city="Lanzarote", lat=28.9722, lng=-13.5656, wait=120, trend=4), # Lanzarote
+                Hospital(name_es="Hosp. de Fuerteventura", name_en="Fuerteventura Hospital", city="Fuerteventura", lat=28.5039, lng=-13.8686, wait=115, trend=3),
+                Hospital(name_es="Hosp. General de La Palma", name_en="La Palma General Hospital", city="La Palma", lat=28.6608, lng=-17.7781, wait=105, trend=2),
+                Hospital(name_es="Hosp. Nuestra Señora de los Reyes", name_en="Our Lady of the Kings Hospital", city="El Hierro", lat=27.8103, lng=-17.9158, wait=65, trend=-2), # El Hierro
+                Hospital(name_es="Hosp. Nuestra Señora de Guadalupe", name_en="Our Lady of Guadalupe Hospital", city="La Gomera", lat=28.0933, lng=-17.1194, wait=75, trend=1), # La Gomera
 
                 # Cantabria
                 Hospital(name_es="Hosp. Marqués de Valdecilla", name_en="Valdecilla Hospital", city="Cantabria", lat=43.4561, lng=-3.8292, wait=80, trend=-2),
@@ -205,6 +223,25 @@ def on_startup():
             ]
             session.add_all(seed_data)
             session.commit()
+            
+            # Seed specific specialty data (Real data from research)
+            hospitals = {h.name_es: h.id for h in session.exec(select(Hospital)).all()}
+            
+            specialty_seed = [
+                # Ibiza - Can Misses
+                SpecialtyData(hospital_id=hospitals["Hosp. Can Misses"], specialty_id="trauma", wait=145),
+                SpecialtyData(hospital_id=hospitals["Hosp. Can Misses"], specialty_id="digestive", wait=40),
+                SpecialtyData(hospital_id=hospitals["Hosp. Can Misses"], specialty_id="dermo", wait=30),
+                SpecialtyData(hospital_id=hospitals["Hosp. Can Misses"], specialty_id="urology", wait=15),
+                
+                # Lanzarote - Molina Orosa
+                SpecialtyData(hospital_id=hospitals["Hosp. Dr. José Molina Orosa"], specialty_id="trauma", wait=74),
+                SpecialtyData(hospital_id=hospitals["Hosp. Dr. José Molina Orosa"], specialty_id="urology", wait=25),
+                SpecialtyData(hospital_id=hospitals["Hosp. Dr. José Molina Orosa"], specialty_id="ophthalmology", wait=90),
+                SpecialtyData(hospital_id=hospitals["Hosp. Dr. José Molina Orosa"], specialty_id="gyn", wait=20),
+            ]
+            session.add_all(specialty_seed)
+            session.commit()
 
     # Iniciar programador de actualizaciones automáticas (Cada 30 días)
     def run_periodic_sync():
@@ -226,7 +263,7 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to SaniRadar API (v0.2.1 - Expanded Cities)"}
+    return {"message": "Welcome to SaniRadar API (v0.2.2 - Real Specialty Data)"}
 
 def normalize_str(s: str) -> str:
     """Simple normalization for accents and case."""
@@ -251,11 +288,23 @@ def get_hospitals(
         norm_prov = normalize_str(province)
         results = [h for h in results if normalize_str(h.city) == norm_prov]
     
-    # Deterministic simulation for specialty
+    # Use real specialty data if available
     if specialty and specialty != "all":
-        modifier = len(specialty) % 7
         for h in results:
-            h.wait = h.wait + modifier
+            spec_data_stmt = select(SpecialtyData).where(
+                SpecialtyData.hospital_id == h.id,
+                SpecialtyData.specialty_id == specialty
+            )
+            spec_data = session.exec(spec_data_stmt).first()
+            
+            if spec_data:
+                h.wait = spec_data.wait
+            else:
+                # Deterministic simulation fallback
+                modifier = len(specialty) % 7
+                h.wait = h.wait + modifier
+            
+    return results
             
     return results
 
