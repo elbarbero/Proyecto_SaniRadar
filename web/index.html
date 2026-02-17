@@ -368,7 +368,7 @@
         const translations = {
             es: {
                 "nav-dashboard": "Dashboard", "nav-map": "Mapa Nacional", "nav-compare": "Comparar", "nav-reports": "Informes",
-                "info-tag": "Información", "info-text": "Datos actualizados al último informe del SNS (2025).",
+                "info-tag": "Información", "info-text": "Datos oficiales (Corte: Junio 2025) — Sincronizado: {date}",
                 "search-placeholder": "Busca un hospital o especialidad...", "page-title": "Monitor de Listas de Espera",
                 "page-subtitle": "Visualiza y compara el tiempo de demora por centros.", "days": "días",
                 "stat-min-wait": "Mínima Espera", "stat-avg": "Media Nacional", "stat-max-wait": "Máxima Espera",
@@ -422,7 +422,7 @@
             },
             en: {
                 "nav-dashboard": "Dashboard", "nav-map": "National Map", "nav-compare": "Compare", "nav-reports": "Reports",
-                "info-tag": "Information", "info-text": "Data updated to the latest SNS report (2025).",
+                "info-tag": "Information", "info-text": "Official Data (As of June 2025) — Synchronized: {date}",
                 "search-placeholder": "Search for a hospital or specialty...", "page-title": "Waiting List Monitor",
                 "page-subtitle": "Visualize and compare delay times by centers.", "days": "days",
                 "stat-min-wait": "Minimum Wait", "stat-avg": "National Average", "stat-max-wait": "Maximum Wait",
@@ -564,19 +564,7 @@
                 return name.includes(searchQuery) || city.includes(searchQuery);
             });
 
-            // Update Translations
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                if (key) el.innerText = translations[currentLang][key] || key;
-            });
-
-            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-                const key = el.getAttribute('data-i18n-placeholder');
-                el.placeholder = translations[currentLang][key] || key;
-            });
-
-            document.getElementById('lang-es').className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'es' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
-            document.getElementById('lang-en').className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'en' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
+            translatePage();
 
             const listContainer = document.getElementById('hospital-list');
             listContainer.innerHTML = '';
@@ -764,15 +752,40 @@
             document.querySelectorAll('.custom-dropdown-menu').forEach(m => m.classList.remove('show'));
         };
 
+        function translatePage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if (key) {
+                    let text = translations[currentLang][key] || key;
+                    if (key === 'info-text') {
+                        const now = new Date();
+                        const options = { day: 'numeric', month: 'long', year: 'numeric' };
+                        const dateStr = now.toLocaleDateString(currentLang === 'es' ? 'es-ES' : 'en-US', options);
+                        text = text.replace('{date}', dateStr);
+                    }
+                    el.innerText = text;
+                }
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = translations[currentLang][key] || key;
+            });
+
+            // Update language toggle buttons
+            const esBtn = document.getElementById('lang-es');
+            const enBtn = document.getElementById('lang-en');
+            if (esBtn && enBtn) {
+                esBtn.className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'es' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
+                enBtn.className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'en' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
+            }
+        }
+
         async function changeLang(lang) {
             currentLang = lang;
             localStorage.setItem('saniRadar_lang', lang);
 
-            // Re-translate components
-            document.querySelectorAll('[data-i18n]').forEach(el => {
-                const key = el.getAttribute('data-i18n');
-                el.innerText = translations[currentLang][key] || key;
-            });
+            translatePage();
 
             // Update Labels
             const specData = specialtiesData.find(s => s.id === selectedSpec);
