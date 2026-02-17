@@ -164,6 +164,7 @@
                 <div class="flex gap-3 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
                     <select id="spec-select"
                         class="bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 px-4 cursor-pointer">
+                        <option value="all" data-i18n="spec-all">Todas las especialidades</option>
                         <option value="trauma" data-i18n="spec-trauma">Traumatología</option>
                         <option value="ophthalmology" data-i18n="spec-ophthalmology">Oftalmología</option>
                         <option value="cardio" data-i18n="spec-cardio">Cirugía Cardíaca</option>
@@ -254,8 +255,8 @@
                         class="bg-white p-6 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 h-full flex flex-col">
                         <div class="flex items-center justify-between mb-6">
                             <h3 class="font-bold text-slate-800 text-lg" data-i18n="comp-title">Comparador Directo</h3>
-                            <button class="text-blue-600 text-sm font-semibold hover:underline" data-i18n="view-all">Ver
-                                todos</button>
+                            <button id="view-all-btn" class="text-blue-600 text-sm font-semibold hover:underline"
+                                data-i18n="view-all">Ver todos</button>
                         </div>
 
                         <div id="hospital-list" class="space-y-4 flex-1">
@@ -314,10 +315,12 @@
                 "hosp-lafe": "Hosp. La Fe",
                 "hosp-ramon": "Hosp. Ramón y Cajal",
                 "hosp-vall": "Vall d'Hebron",
+                "spec-all": "Todas las especialidades",
                 "spec-trauma": "Traumatología",
                 "spec-ophthalmology": "Oftalmología",
                 "spec-cardio": "Cirugía Cardíaca",
                 "spec-dermo": "Dermatología",
+                "all-provinces": "Todas las provincias",
                 "wait-label": "Espera"
             },
             en: {
@@ -349,10 +352,12 @@
                 "hosp-lafe": "La Fe Hospital",
                 "hosp-ramon": "Ramon y Cajal Hospital",
                 "hosp-vall": "Vall d'Hebron Hospital",
+                "spec-all": "All Specialities",
                 "spec-trauma": "Traumatology",
                 "spec-ophthalmology": "Ophthalmology",
                 "spec-cardio": "Cardiac Surgery",
                 "spec-dermo": "Dermatology",
+                "all-provinces": "All Provinces",
                 "wait-label": "Wait"
             }
         };
@@ -524,21 +529,45 @@
             }
         });
 
+        // Initial load
+        async function initialize() {
+            // Populate Provinces
+            try {
+                const response = await fetch('http://localhost:8000/api/provinces');
+                if (response.ok) {
+                    const provinces = await response.json();
+                    const provSelect = document.getElementById('prov-select');
+                    provSelect.innerHTML = `<option value="all" data-i18n="all-provinces">${translations[currentLang]['all-provinces']}</option>`;
+                    provinces.forEach(p => {
+                        const opt = document.createElement('option');
+                        opt.value = p;
+                        opt.innerText = p;
+                        provSelect.appendChild(opt);
+                    });
+                }
+            } catch (e) {
+                console.log("Could not load provinces from API.");
+            }
+
+            updateUI();
+        }
+
+        initialize();
+
         // Event listeners
         document.getElementById('spec-select').addEventListener('change', () => {
             updateUI();
         });
 
         document.getElementById('prov-select').addEventListener('change', (e) => {
-            const city = e.target.value;
-            // First update list/data from server
-            updateUI().then(() => {
-                // Then fly to location if it exists in current data
-                const hosp = hospitals.find(h => h.city.toLowerCase() === city);
-                if (hosp) {
-                    map.flyTo([hosp.lat, hosp.lng], 12);
-                }
-            });
+            updateUI();
+        });
+
+        document.getElementById('view-all-btn').addEventListener('click', () => {
+            document.getElementById('spec-select').value = 'all';
+            document.getElementById('prov-select').value = 'all';
+            updateUI();
+            map.flyTo([40.4168, -3.7038], 6);
         });
 
     </script>

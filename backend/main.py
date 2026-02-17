@@ -33,23 +33,123 @@ def get_session():
         yield session
 
 # --- App ---
-app = FastAPI(title="SaniRadar API", version="0.2.0")
+app = FastAPI(title="SaniRadar API", version="0.2.1")
+
+PROVINCES = [
+    "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", 
+    "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "A Coruña", "Cuenca", "Girona", "Granada", 
+    "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Jaén", "León", "Lleida", "Lugo", "Madrid", 
+    "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Pontevedra", "La Rioja", "Salamanca", 
+    "Segovia", "Sevilla", "Soria", "Tarragona", "Santa Cruz de Tenerife", "Teruel", "Toledo", "Valencia", 
+    "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
+]
 
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
-    # Seed data if empty
+    # Seed data if empty or incomplete
     with Session(engine) as session:
         statement = select(Hospital)
-        results = session.exec(statement).first()
-        if not results:
+        results = session.exec(statement).all()
+        # Si hay pocos hospitales (menos de 50), limpiamos y re-poblamos para asegurar cobertura total
+        if len(results) < 50:
+            # Eliminar antiguos para evitar duplicados en el re-seed
+            for h in results:
+                session.delete(h)
+            session.commit()
+            
             seed_data = [
+                # Andalucía
+                Hospital(name_es="Hosp. Virgen del Rocío", name_en="Virgen del Rocio Hospital", city="Sevilla", lat=37.3592, lng=-5.9806, wait=105, trend=4),
+                Hospital(name_es="Hosp. Carlos Haya", name_en="Carlos Haya Hospital", city="Málaga", lat=36.7213, lng=-4.4214, wait=120, trend=10),
+                Hospital(name_es="Hosp. Virgen de las Nieves", name_en="Virgen de las Nieves Hospital", city="Granada", lat=37.1895, lng=-3.6095, wait=110, trend=2),
+                Hospital(name_es="Hosp. Puerta del Mar", name_en="Puerta del Mar Hospital", city="Cádiz", lat=36.5111, lng=-6.2736, wait=95, trend=-1),
+                Hospital(name_es="Hosp. Reina Sofía", name_en="Reina Sofia Hospital", city="Córdoba", lat=37.8687, lng=-4.7936, wait=85, trend=3),
+                Hospital(name_es="Hosp. Juan Ramón Jiménez", name_en="Juan Ramon Jimenez Hospital", city="Huelva", lat=37.2825, lng=-6.9536, wait=102, trend=5),
+                Hospital(name_es="Hosp. Torrecárdenas", name_en="Torrecardenas Hospital", city="Almería", lat=36.8587, lng=-2.4392, wait=115, trend=6),
+                Hospital(name_es="Hosp. Ciudad de Jaén", name_en="Jaen Hospital", city="Jaén", lat=37.7656, lng=-3.7744, wait=98, trend=4),
+
+                # Aragón
+                Hospital(name_es="Hosp. Miguel Servet", name_en="Miguel Servet Hospital", city="Zaragoza", lat=41.6341, lng=-0.8931, wait=88, trend=2),
+                Hospital(name_es="Hosp. San Jorge", name_en="San Jorge Hospital", city="Huesca", lat=42.1317, lng=-0.4181, wait=75, trend=-2),
+                Hospital(name_es="Hosp. Obispo Polanco", name_en="Obispo Polanco Hospital", city="Teruel", lat=40.3425, lng=-1.1067, wait=70, trend=-1),
+
+                # Asturias
+                Hospital(name_es="Hosp. Universitario Central de Asturias", name_en="Asturias Central Hospital", city="Asturias", lat=43.3761, lng=-5.8428, wait=85, trend=-3),
+
+                # Baleares
+                Hospital(name_es="Hosp. Son Espases", name_en="Son Espases Hospital", city="Islas Baleares", lat=39.6083, lng=2.6394, wait=92, trend=4),
+
+                # Canarias
+                Hospital(name_es="Hosp. Dr. Negrín", name_en="Dr. Negrin Hospital", city="Las Palmas", lat=28.1256, lng=-15.4475, wait=140, trend=8),
+                Hospital(name_es="Hosp. Univ. de Canarias", name_en="Canary Islands Univ. Hospital", city="Santa Cruz de Tenerife", lat=28.4552, lng=-16.2847, wait=135, trend=10),
+
+                # Cantabria
+                Hospital(name_es="Hosp. Marqués de Valdecilla", name_en="Valdecilla Hospital", city="Cantabria", lat=43.4561, lng=-3.8292, wait=80, trend=-2),
+
+                # Castilla - La Mancha
+                Hospital(name_es="Hosp. Universitario de Toledo", name_en="Toledo University Hospital", city="Toledo", lat=39.8722, lng=-3.9961, wait=130, trend=12),
+                Hospital(name_es="Hosp. Universitario de Albacete", name_en="Albacete University Hospital", city="Albacete", lat=38.9839, lng=-1.8544, wait=90, trend=3),
+                Hospital(name_es="Hosp. General de Ciudad Real", name_en="Ciudad Real General Hospital", city="Ciudad Real", lat=38.9814, lng=-3.9239, wait=105, trend=5),
+                Hospital(name_es="Hosp. Univ. de Guadalajara", name_en="Guadalajara Univ. Hospital", city="Guadalajara", lat=40.6303, lng=-3.1592, wait=112, trend=7),
+                Hospital(name_es="Hosp. Virgen de la Luz", name_en="Virgen de la Luz Hospital", city="Cuenca", lat=40.0767, lng=-2.1408, wait=88, trend=2),
+
+                # Castilla y León
                 Hospital(name_es="Hosp. Universitario Burgos", name_en="Burgos University Hospital", city="Burgos", lat=42.3439, lng=-3.6969, wait=12, trend=-2),
-                Hospital(name_es="Hosp. La Paz", name_en="La Paz Hospital", city="Madrid", lat=40.4819, lng=-3.6872, wait=145, trend=15),
+                Hospital(name_es="Hosp. Clínico de Valladolid", name_en="Valladolid Clinical Hospital", city="Valladolid", lat=41.6606, lng=-4.7194, wait=115, trend=9),
+                Hospital(name_es="Hosp. Univ. de Salamanca", name_en="Salamanca Univ. Hospital", city="Salamanca", lat=40.9639, lng=-5.6739, wait=95, trend=4),
+                Hospital(name_es="Hosp. Univ. de León", name_en="Leon Univ. Hospital", city="León", lat=42.6131, lng=-5.5714, wait=108, trend=6),
+                Hospital(name_es="Hosp. de Segovia", name_en="Segovia Hospital", city="Segovia", lat=40.9392, lng=-4.1136, wait=75, trend=-1),
+                Hospital(name_es="Hosp. Univ. de Palencia", name_en="Palencia Univ. Hospital", city="Palencia", lat=42.0125, lng=-4.5264, wait=82, trend=2),
+                Hospital(name_es="Hosp. de Soria", name_en="Soria Hospital", city="Soria", lat=41.7661, lng=-2.4789, wait=65, trend=-2),
+                Hospital(name_es="Hosp. de Zamora", name_en="Zamora Hospital", city="Zamora", lat=41.5036, lng=-5.7486, wait=78, trend=1),
+                Hospital(name_es="Hosp. Univ. de Ávila", name_en="Avila Univ. Hospital", city="Ávila", lat=40.6552, lng=-4.6864, wait=85, trend=3),
+
+                # Cataluña
                 Hospital(name_es="Clínic Barcelona", name_en="Clinic Hospital Barcelona", city="Barcelona", lat=41.3894, lng=2.1528, wait=68, trend=5),
-                Hospital(name_es="Hosp. La Fe", name_en="La Fe Hospital", city="Valencia", lat=39.4449, lng=-0.3754, wait=92, trend=-1),
+                Hospital(name_es="Vall d'Hebron", name_en="Vall d'Hebron Hospital", city="Barcelona", lat=41.4276, lng=2.1432, wait=75, trend=-3),
+                Hospital(name_es="Hosp. Josep Trueta", name_en="Josep Trueta Hospital", city="Girona", lat=41.9961, lng=2.8252, wait=110, trend=6),
+                Hospital(name_es="Hosp. Arnau de Vilanova", name_en="Arnau de Vilanova Hospital", city="Lleida", lat=41.6264, lng=0.6083, wait=105, trend=4),
+                Hospital(name_es="Hosp. Joan XXIII", name_en="Joan XXIII Hospital", city="Tarragona", lat=41.1219, lng=1.2389, wait=98, trend=3),
+
+                # Extremadura
+                Hospital(name_es="Hosp. de Badajoz", name_en="Badajoz Hospital", city="Badajoz", lat=38.8789, lng=-6.9786, wait=120, trend=9),
+                Hospital(name_es="Hosp. San Pedro de Alcántara", name_en="San Pedro de Alcantara Hospital", city="Cáceres", lat=39.4792, lng=-6.3769, wait=115, trend=7),
+
+                # Galicia
+                Hospital(name_es="Hosp. Clínico de Santiago", name_en="Santiago Clinical Hospital", city="A Coruña", lat=42.8711, lng=-8.5636, wait=85, trend=-2),
+                Hospital(name_es="Hosp. Álvaro Cunqueiro", name_en="Alvaro Cunqueiro Hospital", city="Pontevedra", lat=42.1969, lng=-8.7417, wait=112, trend=5),
+                Hospital(name_es="Hosp. Lucus Augusti", name_en="Lucus Augusti Hospital", city="Lugo", lat=43.0131, lng=-7.5347, wait=78, trend=-3),
+                Hospital(name_es="Hosp. Univ. de Ourense", name_en="Ourense Univ. Hospital", city="Ourense", lat=42.3422, lng=-7.8547, wait=92, trend=2),
+
+                # Madrid
+                Hospital(name_es="Hosp. La Paz", name_en="La Paz Hospital", city="Madrid", lat=40.4819, lng=-3.6872, wait=145, trend=15),
                 Hospital(name_es="Hosp. Ramón y Cajal", name_en="Ramon y Cajal Hospital", city="Madrid", lat=40.4878, lng=-3.6917, wait=110, trend=8),
-                Hospital(name_es="Vall d'Hebron", name_en="Vall d'Hebron Hospital", city="Barcelona", lat=41.4276, lng=2.1432, wait=75, trend=-3)
+                Hospital(name_es="Hosp. 12 de Octubre", name_en="12 de Octubre Hospital", city="Madrid", lat=40.3775, lng=-3.6975, wait=125, trend=10),
+                Hospital(name_es="Hosp. Clínico San Carlos", name_en="San Carlos Clinical Hospital", city="Madrid", lat=40.4406, lng=-3.7225, wait=105, trend=4),
+
+                # Murcia
+                Hospital(name_es="Hosp. Virgen de la Arrixaca", name_en="Virgen de la Arrixaca Hospital", city="Murcia", lat=37.9431, lng=-1.1347, wait=118, trend=7),
+
+                # Navarra
+                Hospital(name_es="Hosp. Univ. de Navarra", name_en="Navarra Univ. Hospital", city="Navarra", lat=42.8083, lng=-1.6631, wait=72, trend=-4),
+
+                # País Vasco
+                Hospital(name_es="Hosp. Universitario de Álavo", name_en="U. Hospital of Alava", city="Álava", lat=42.8467, lng=-2.6717, wait=45, trend=-5),
+                Hospital(name_es="Hosp. de Basurto", name_en="Basurto Hospital", city="Vizcaya", lat=43.2618, lng=-2.9494, wait=52, trend=-1),
+                Hospital(name_es="Hosp. Donostia", name_en="Donostia Hospital", city="Guipúzcoa", lat=43.3083, lng=-1.9744, wait=68, trend=2),
+
+                # La Rioja
+                Hospital(name_es="Hosp. San Pedro", name_en="San Pedro Hospital", city="La Rioja", lat=42.4592, lng=-2.4286, wait=60, trend=-3),
+
+                # Comunidad Valenciana
+                Hospital(name_es="Hosp. La Fe", name_en="La Fe Hospital", city="Valencia", lat=39.4449, lng=-0.3754, wait=92, trend=-1),
+                Hospital(name_es="Hosp. General de Alicante", name_en="Alicante General Hospital", city="Alicante", lat=38.3562, lng=-0.4908, wait=125, trend=11),
+                Hospital(name_es="Hosp. General de Castellón", name_en="Castellón General Hospital", city="Castellón", lat=39.9961, lng=-0.0436, wait=110, trend=6),
+
+                # Ceuta y Melilla
+                Hospital(name_es="Hosp. Univ. de Ceuta", name_en="Ceuta Univ. Hospital", city="Ceuta", lat=35.8883, lng=-5.3164, wait=55, trend=-2),
+                Hospital(name_es="Hospital Comarcal de Melilla", name_en="Melilla Regional Hospital", city="Melilla", lat=35.2919, lng=-2.9411, wait=65, trend=1)
             ]
             session.add_all(seed_data)
             session.commit()
@@ -64,7 +164,16 @@ app.add_middleware(
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to SaniRadar API (v0.2.0 with persistence)"}
+    return {"message": "Welcome to SaniRadar API (v0.2.1 - Expanded Cities)"}
+
+def normalize_str(s: str) -> str:
+    """Simple normalization for accents and case."""
+    import unicodedata
+    return "".join(c for c in unicodedata.normalize('NFD', s.lower()) if unicodedata.category(c) != 'Mn')
+
+@app.get("/api/provinces")
+def get_provinces():
+    return PROVINCES
 
 @app.get("/api/hospitals", response_model=List[Hospital])
 def get_hospitals(
@@ -73,12 +182,14 @@ def get_hospitals(
     session: Session = Depends(get_session)
 ):
     statement = select(Hospital)
-    if province and province != "all":
-        statement = statement.where(Hospital.city == province.capitalize())
-    
     results = session.exec(statement).all()
     
-    # Deterministic simulation for specialty (not stored in DB yet)
+    # Filtering in Python for maximum flexibility with accents/normalization
+    if province and province != "all":
+        norm_prov = normalize_str(province)
+        results = [h for h in results if normalize_str(h.city) == norm_prov]
+    
+    # Deterministic simulation for specialty
     if specialty and specialty != "all":
         modifier = len(specialty) % 7
         for h in results:
