@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from sqlmodel import Field, SQLModel, create_engine, Session, select
 from typing import List, Optional
 import os
+import threading
+import time
+from backend.sync_service import check_for_new_reports
 
 # --- Models ---
 class Hospital(SQLModel, table=True):
@@ -202,6 +205,16 @@ def on_startup():
             ]
             session.add_all(seed_data)
             session.commit()
+
+    # Iniciar programador de actualizaciones automáticas (Cada 30 días)
+    def run_periodic_sync():
+        while True:
+            check_for_new_reports()
+            # Dormir 30 días (30 * 24 * 60 * 60 segundos)
+            time.sleep(2592000)
+
+    thread = threading.Thread(target=run_periodic_sync, daemon=True)
+    thread.start()
 
 app.add_middleware(
     CORSMiddleware,
