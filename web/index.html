@@ -360,7 +360,18 @@
         let activeMarkers = [];
 
         // Populate markers and list
-        function updateUI() {
+        async function updateUI() {
+            let data = hospitals; // Fallback to mock
+
+            try {
+                const response = await fetch('http://localhost:8000/api/hospitals');
+                if (response.ok) {
+                    data = await response.json();
+                }
+            } catch (e) {
+                console.log("API not reached, using local fallback data.");
+            }
+
             // Update Text
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
@@ -383,8 +394,9 @@
             activeMarkers.forEach(m => map.removeLayer(m));
             activeMarkers = [];
 
-            hospitals.forEach(hosp => {
-                const hospName = translations[currentLang][hosp.nameKey];
+            data.forEach(hosp => {
+                // Determine name based on locale
+                const hospName = currentLang === 'es' ? (hosp.name_es || translations[currentLang][hosp.nameKey]) : (hosp.name_en || translations[currentLang][hosp.nameKey]);
 
                 // Determine color
                 let color = 'bg-green-500';
