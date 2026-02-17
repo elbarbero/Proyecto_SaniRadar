@@ -119,6 +119,23 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #cbd5e1;
         }
+
+        /* Modal Backdrop */
+        #custom-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(15, 23, 42, 0.4);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem;
+        }
+
+        #custom-modal.show {
+            display: flex;
+        }
     </style>
 </head>
 
@@ -344,7 +361,7 @@
                         </div>
 
                         <div class="mt-8 pt-6 border-t border-slate-50">
-                            <button
+                            <button id="request-btn"
                                 class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
                                 <i data-lucide="external-link" class="w-5 h-5"></i>
                                 <span data-i18n="btn-request">Solicitar Libre Elección</span>
@@ -360,6 +377,22 @@
             </div>
         </section>
     </main>
+
+    <!-- Modal for Alerts -->
+    <div id="custom-modal">
+        <div
+            class="bg-white rounded-3xl shadow-2xl max-w-md w-full p-8 transform transition-all animate-in zoom-in duration-200">
+            <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mb-6 mx-auto">
+                <i data-lucide="info" class="w-8 h-8"></i>
+            </div>
+            <h3 id="modal-title" class="text-xl font-bold text-slate-800 text-center mb-3">Aviso</h3>
+            <p id="modal-text" class="text-slate-500 text-center leading-relaxed mb-8"></p>
+            <button onclick="closeModal()"
+                class="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-slate-800 transition-all shadow-lg shadow-slate-200">
+                Entendido
+            </button>
+        </div>
+    </div>
 
     <!-- Leaflet JS -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -479,6 +512,64 @@
         let currentLang = localStorage.getItem('saniRadar_lang') || 'es';
         let allHospitalsData = [];
         let trendChart;
+        let lastSelectedRegion = 'all';
+
+        const regionMapping = {
+            "Madrid": "https://www.comunidad.madrid/servicios/salud/libre-eleccion-sanitaria",
+            "Barcelona": "https://catsalut.gencat.cat/",
+            "Girona": "https://catsalut.gencat.cat/",
+            "Lleida": "https://catsalut.gencat.cat/",
+            "Tarragona": "https://catsalut.gencat.cat/",
+            "Islas Baleares": "https://www.ibsalut.es/es/atencion-al-usuario/derechos-y-deberes",
+            "Ibiza": "https://www.ibsalut.es/es/atencion-al-usuario/derechos-y-deberes",
+            "Menorca": "https://www.ibsalut.es/es/atencion-al-usuario/derechos-y-deberes",
+            "Formentera": "https://www.ibsalut.es/es/atencion-al-usuario/derechos-y-deberes",
+            "Las Palmas": "https://www.miscs.org/",
+            "Lanzarote": "https://www.miscs.org/",
+            "Fuerteventura": "https://www.miscs.org/",
+            "Santa Cruz de Tenerife": "https://www.miscs.org/",
+            "La Palma": "https://www.miscs.org/",
+            "La Gomera": "https://www.miscs.org/",
+            "El Hierro": "https://www.miscs.org/",
+            "Sevilla": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Málaga": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Granada": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Cádiz": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Córdoba": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Huelva": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Almería": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Jaén": "https://www.sspa.juntadeandalucia.es/servicioandaluzdesalud/clicsalud/",
+            "Valencia": "https://www.gva.es/es/inicio/procedimientos?id_proc=14777",
+            "Alicante": "https://www.gva.es/es/inicio/procedimientos?id_proc=14777",
+            "Castellón": "https://www.gva.es/es/inicio/procedimientos?id_proc=14777",
+            "Burgos": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Valladolid": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Salamanca": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "León": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Segovia": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Palencia": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Soria": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Zamora": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "Ávila": "https://www.saludcastillayleon.es/ciudadanos/es/carpeta-paciente",
+            "A Coruña": "https://esaude.sergas.gal/",
+            "Pontevedra": "https://esaude.sergas.gal/",
+            "Lugo": "https://esaude.sergas.gal/",
+            "Ourense": "https://esaude.sergas.gal/",
+            "Asturias": "https://www.astursalud.es/ciudadania"
+        };
+
+        const ministerialUrl = "https://www.sanidad.gob.es/profesionales/prestacionesSanitarias/CarteraDeServicios/home.htm";
+
+        function showModal(title, text) {
+            document.getElementById('modal-title').innerText = title;
+            document.getElementById('modal-text').innerText = text;
+            document.getElementById('custom-modal').classList.add('show');
+            lucide.createIcons();
+        }
+
+        function closeModal() {
+            document.getElementById('custom-modal').classList.remove('show');
+        }
 
         function changeLang(lang) {
             currentLang = lang;
@@ -498,40 +589,35 @@
 
         let activeMarkers = [];
 
-        async function updateStats() {
+        async function updateStats(specialty = 'all') {
             try {
-                const response = await fetch('http://localhost:8000/api/stats');
+                const url = `http://localhost:8000/api/stats${specialty !== 'all' ? `?specialty=${specialty}` : ''}`;
+                const response = await fetch(url);
                 if (response.ok) {
                     const stats = await response.json();
 
-                    // Update Stat Cards
-                    const updateCard = (id, hosp, val, isAvg = false) => {
-                        const card = document.querySelector(`#${id}`).parentElement;
-                        const nameEl = card.querySelector('.text-xs');
-                        const valEl = card.querySelector('.text-2xl');
-
-                        if (hosp) {
-                            nameEl.innerText = currentLang === 'es' ? hosp.name_es : hosp.name_en;
-                            valEl.innerHTML = `${hosp.wait} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
-                        } else if (isAvg) {
-                            valEl.innerHTML = `${val} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
-                        }
+                    const getSpecLabel = (specId, mode) => {
+                        if (mode === 'avg' && specialty === 'all') return '';
+                        const name = specialtiesData.find(s => s.id === specId)?.key ? translations[currentLang][specialtiesData.find(s => s.id === specId).key] : specId;
+                        return ` (${name})`;
                     };
 
-                    updateCard('api-status-dot', stats.min_hosp, null); // Reusing ID for search context
-                    // Note: In index.html, these don't have unique IDs inside markers, I will add IDs to indicators in the HTML next or use nth-child
                     const statCards = document.querySelectorAll('main section .grid .bg-white.p-6');
                     if (statCards.length >= 3) {
                         // Min Wait
                         statCards[0].querySelector('.text-2xl').innerHTML = `${stats.min_hosp.wait} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
                         statCards[0].querySelector('.text-xs').innerText = currentLang === 'es' ? stats.min_hosp.name_es : stats.min_hosp.name_en;
+                        statCards[0].querySelector('p:first-child').innerHTML = `${translations[currentLang]['stat-min-wait']}<span class="text-blue-500 font-bold ml-1">${getSpecLabel(stats.min_spec, 'min')}</span>`;
 
                         // Avg
+                        const avgLabel = specialty === 'all' ? '' : getSpecLabel(specialty, 'avg');
                         statCards[1].querySelector('.text-2xl').innerHTML = `${stats.avg} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
+                        statCards[1].querySelector('p:first-child').innerHTML = `${translations[currentLang]['stat-avg']}<span class="text-blue-500 font-bold ml-1">${avgLabel}</span>`;
 
                         // Max Wait
                         statCards[2].querySelector('.text-2xl').innerHTML = `${stats.max_hosp.wait} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
                         statCards[2].querySelector('.text-xs').innerText = currentLang === 'es' ? stats.max_hosp.name_es : stats.max_hosp.name_en;
+                        statCards[2].querySelector('p:first-child').innerHTML = `${translations[currentLang]['stat-max-wait']}<span class="text-blue-500 font-bold ml-1">${getSpecLabel(stats.max_spec, 'max')}</span>`;
                     }
                 }
             } catch (e) { console.error("Stats fetch failed", e); }
@@ -589,7 +675,11 @@
 
                 const item = document.createElement('div');
                 item.className = 'group p-4 rounded-2xl bg-white border border-slate-50 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer text-left';
-                item.onclick = () => { map.flyTo([hosp.lat, hosp.lng], 12); marker.openPopup(); };
+                item.onclick = () => {
+                    map.flyTo([hosp.lat, hosp.lng], 12);
+                    marker.openPopup();
+                    lastSelectedRegion = hosp.city;
+                };
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
@@ -613,6 +703,7 @@
                 map.fitBounds(bounds, { padding: [50, 50], maxZoom: 12 });
             }
 
+            updateStats(specialty);
             lucide.createIcons();
 
             // Randomize chart data for effect
@@ -722,8 +813,39 @@
                 document.getElementById('prov-menu').classList.remove('show');
             }
             label.innerText = text;
+            if (id !== 'all') lastSelectedRegion = id;
             updateUI();
         }
+
+        document.getElementById('request-btn').onclick = () => {
+            if (lastSelectedRegion === 'all') {
+                showModal(
+                    currentLang === 'es' ? "Selecciona una provincia" : "Select a province",
+                    currentLang === 'es' ? "Para solicitar la libre elección, primero debes seleccionar una provincia o un hospital específico en el mapa o en la lista." : "To request free choice, you must first select a province or a specific hospital on the map or in the list."
+                );
+                return;
+            }
+
+            const url = regionMapping[lastSelectedRegion] || ministerialUrl;
+
+            // Portals that require authentication / secure access
+            const portalRegions = ["Burgos", "Valladolid", "Salamanca", "León", "Segovia", "Palencia", "Soria", "Zamora", "Ávila", "A Coruña", "Pontevedra", "Lugo", "Ourense", "Las Palmas", "Lanzarote", "Fuerteventura", "Santa Cruz de Tenerife", "La Palma", "La Gomera", "El Hierro"];
+            const isPortal = portalRegions.includes(lastSelectedRegion);
+
+            if (isPortal) {
+                showModal(
+                    currentLang === 'es' ? "Acceso al Portal de Salud" : "Health Portal Access",
+                    currentLang === 'es' ? `Vas a ser redirigido al portal personal de salud de ${lastSelectedRegion}. Allí podrás gestionar tu Libre Elección tras identificarte de forma segura (Cl@ve, Certificado o DNIe).` : `You will be redirected to the personal health portal of ${lastSelectedRegion}. There you can manage your Free Choice after identifying yourself securely (Cl@ve, Certificate or DNIe).`
+                );
+                // We could add a confirm button in the modal, but for now we follow up with the redirect or let showModal handle the info.
+                // To keep it simple and effective: Wait 2s and redirect, OR add a "Continue" button in a future refinement.
+                // For now, let's just open the URL after the modal or provide a clear button in the modal.
+                // DECISION: Actually, let's just use the modal as information and then open.
+                setTimeout(() => window.open(url, '_blank'), 2000);
+            } else {
+                window.open(url, '_blank');
+            }
+        };
 
         // Toggle Menus
         document.getElementById('spec-btn').onclick = (e) => {

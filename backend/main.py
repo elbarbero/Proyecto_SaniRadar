@@ -44,14 +44,14 @@ def get_session():
 # --- App ---
 app = FastAPI(title="SaniRadar API", version="0.2.2")
 
-PROVINCES = [
+PROVINCES = sorted([
     "Álava", "Albacete", "Alicante", "Almería", "Asturias", "Ávila", "Badajoz", "Barcelona", "Burgos", "Cáceres", 
     "Cádiz", "Cantabria", "Castellón", "Ciudad Real", "Córdoba", "A Coruña", "Cuenca", "Girona", "Granada", 
     "Guadalajara", "Guipúzcoa", "Huelva", "Huesca", "Islas Baleares", "Ibiza", "Menorca", "Formentera", "Jaén", "León", "Lleida", "Lugo", "Madrid", 
     "Málaga", "Murcia", "Navarra", "Ourense", "Palencia", "Las Palmas", "Lanzarote", "Fuerteventura", "Pontevedra", "La Rioja", "Salamanca", 
     "Segovia", "Sevilla", "Soria", "Tarragona", "Santa Cruz de Tenerife", "La Palma", "La Gomera", "El Hierro", "Teruel", "Toledo", "Valencia", 
     "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
-]
+])
 
 SPECIALTIES = [
     {"id": "allergy", "key": "spec-allergy"},
@@ -309,21 +309,60 @@ def get_hospitals(
     return results
 
 @app.get("/api/stats")
-def get_stats(session: Session = Depends(get_session)):
-    statement = select(Hospital)
-    hospitals = session.exec(statement).all()
+def get_stats(specialty: Optional[str] = None, session: Session = Depends(get_session)):
+    hospitals = session.exec(select(Hospital)).all()
     if not hospitals:
-        return {"min_hosp": None, "avg": 0, "max_hosp": None}
-        
-    min_hosp = min(hospitals, key=lambda h: h.wait)
-    max_hosp = max(hospitals, key=lambda h: h.wait)
+        return {"min_hosp": None, "avg": 0, "max_hosp": None, "min_spec": None, "max_spec": None}
+    
+    # 1. Base average is always the mean of general hospital wait times
     avg_wait = sum(h.wait for h in hospitals) / len(hospitals)
     
-    return {
-        "min_hosp": min_hosp,
-        "avg": round(avg_wait, 1),
-        "max_hosp": max_hosp
-    }
+    if specialty and specialty != "all":
+        # Specific specialty mode
+        for h in hospitals:
+            sd = session.exec(select(SpecialtyData).where(SpecialtyData.hospital_id == h.id, SpecialtyData.specialty_id == specialty)).first()
+            h.wait = sd.wait if sd else h.wait + (len(specialty) % 7)
+        
+        min_h = min(hospitals, key=lambda h: h.wait)
+        max_h = max(hospitals, key=lambda h: h.wait)
+        return {
+            "min_hosp": min_h, "max_hosp": max_h, "avg": round(avg_wait, 1),
+            "min_spec": specialty, "max_spec": specialty
+        }
+    else:
+        # "All" mode: Absolute cross-product search
+        # We fetch all specialty data once to optimize
+        all_sd = session.exec(select(SpecialtyData)).all()
+        sd_map = {}
+        for sd in all_sd:
+            if sd.hospital_id not in sd_map: sd_map[sd.hospital_id] = {}
+            sd_map[sd.hospital_id][sd.specialty_id] = sd.wait
+            
+        abs_min = None
+        abs_max = None
+        
+        for h in hospitals:
+            h_sd = sd_map.get(h.id, {})
+            for s in SPECIALTIES:
+                sid = s["id"]
+                val = h_sd.get(sid, h.wait + (len(sid) % 7))
+                
+                record = {"h": h, "w": val, "s": sid}
+                if abs_min is None or val < abs_min["w"]: abs_min = record
+                if abs_max is None or val > abs_max["w"]: abs_max = record
+        
+        # We must clones the hospital objects to avoid modifying the ones in session (though we aren't committing)
+        # and update their 'wait' to the correct record value
+        final_min = abs_min["h"].model_copy()
+        final_min.wait = abs_min["w"]
+        
+        final_max = abs_max["h"].model_copy()
+        final_max.wait = abs_max["w"]
+        
+        return {
+            "min_hosp": final_min, "max_hosp": final_max, "avg": round(avg_wait, 1),
+            "min_spec": abs_min["s"], "max_spec": abs_max["s"]
+        }
 
 if __name__ == "__main__":
     import uvicorn
