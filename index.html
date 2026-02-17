@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SaniRadar - Waiting List Monitor</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        #map {
+            height: calc(100vh - 200px);
+            border-radius: 1rem;
+            z-index: 10;
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-item-active {
+            background-color: #eff6ff;
+            color: #2563eb;
+            border-left: 4px solid #2563eb;
+        }
+
+        .custom-marker {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            border: 3px solid white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            color: white;
+            font-weight: bold;
+            font-size: 12px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #cbd5e1;
+        }
+    </style>
+</head>
+
+<body class="h-screen flex overflow-hidden">
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col hidden md:flex">
+        <div class="p-6 flex items-center gap-3">
+            <div class="bg-blue-600 p-2 rounded-lg text-white">
+                <i data-lucide="activity"></i>
+            </div>
+            <h1 class="font-bold text-xl text-slate-800 tracking-tight">SaniRadar</h1>
+        </div>
+
+        <nav class="flex-1 px-4 space-y-2 mt-4">
+            <a href="#" class="sidebar-item-active flex items-center gap-3 px-4 py-3 rounded-xl transition-all">
+                <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                <span class="font-medium" data-i18n="nav-dashboard">Dashboard</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                <i data-lucide="map" class="w-5 h-5"></i>
+                <span class="font-medium" data-i18n="nav-map">Mapa Nacional</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                <i data-lucide="git-compare" class="w-5 h-5"></i>
+                <span class="font-medium" data-i18n="nav-compare">Comparar</span>
+            </a>
+            <a href="#"
+                class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-500 hover:bg-slate-50 transition-all">
+                <i data-lucide="file-text" class="w-5 h-5"></i>
+                <span class="font-medium" data-i18n="nav-reports">Informes</span>
+            </a>
+        </nav>
+
+        <div class="p-6">
+            <div class="bg-blue-50 p-4 rounded-2xl">
+                <p class="text-xs font-semibold text-blue-600 uppercase mb-1" data-i18n="info-tag">Información</p>
+                <p class="text-sm text-slate-600" data-i18n="info-text">Datos actualizados al último informe del SNS
+                    (2025).</p>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        <!-- Top Header -->
+        <header class="h-20 bg-white border-bottom border-slate-200 flex items-center justify-between px-8 z-20">
+            <div class="flex items-center gap-4 flex-1 max-w-2xl">
+                <div class="relative w-full">
+                    <i data-lucide="search" class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400"></i>
+                    <input type="text" id="main-search" data-i18n-placeholder="search-placeholder"
+                        placeholder="Busca un hospital o especialidad..."
+                        class="w-full pl-10 pr-4 py-2.5 bg-slate-100 border-none rounded-2xl focus:ring-2 focus:ring-blue-500 transition-all">
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <!-- Language Selector -->
+                <div class="flex bg-slate-100 p-1 rounded-xl">
+                    <button onclick="changeLang('es')" id="lang-es"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all bg-white shadow-sm text-blue-600">ES</button>
+                    <button onclick="changeLang('en')" id="lang-en"
+                        class="px-3 py-1.5 rounded-lg text-xs font-bold transition-all text-slate-500 hover:bg-white/50">EN</button>
+                </div>
+
+                <button class="p-2.5 text-slate-500 hover:bg-slate-100 rounded-full transition-all">
+                    <i data-lucide="bell" class="w-6 h-6"></i>
+                </button>
+                <div
+                    class="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 border-2 border-white shadow-sm">
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <section class="flex-1 overflow-y-auto p-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800" data-i18n="page-title">Monitor de Listas de Espera
+                    </h2>
+                    <p class="text-slate-500" data-i18n="page-subtitle">Visualiza y compara el tiempo de demora por
+                        centros.</p>
+                </div>
+
+                <div class="flex gap-3 bg-white p-1.5 rounded-2xl shadow-sm border border-slate-200">
+                    <select id="spec-select"
+                        class="bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 px-4 cursor-pointer">
+                        <option value="trauma" data-i18n="spec-trauma">Traumatología</option>
+                        <option value="ophthalmology" data-i18n="spec-ophthalmology">Oftalmología</option>
+                        <option value="cardio" data-i18n="spec-cardio">Cirugía Cardíaca</option>
+                        <option value="dermo" data-i18n="spec-dermo">Dermatología</option>
+                    </select>
+                    <div class="w-px h-6 bg-slate-200 my-auto"></div>
+                    <select id="prov-select"
+                        class="bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 px-4 cursor-pointer">
+                        <option value="madrid">Madrid</option>
+                        <option value="barcelona">Barcelona</option>
+                        <option value="burgos">Burgos</option>
+                        <option value="valencia">Valencia</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Dashboard Grid -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <!-- Map Column -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white p-2 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100">
+                        <div id="map"></div>
+                    </div>
+
+                    <!-- Statistics Bar -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div
+                            class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-green-500 text-left">
+                            <p class="text-slate-500 text-sm font-medium mb-1" data-i18n="stat-min-wait">Mínima Espera
+                            </p>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-2xl font-bold text-slate-800">12 <small class="text-sm font-normal"
+                                        data-i18n="days">días</small></span>
+                                <span
+                                    class="text-xs text-green-600 font-bold bg-green-50 px-2 py-0.5 rounded-full">-4%</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2" data-i18n="hosp-burgos-full">Hosp. Universitario
+                                Burgos</p>
+                        </div>
+                        <div
+                            class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-blue-500 text-left">
+                            <p class="text-slate-500 text-sm font-medium mb-1" data-i18n="stat-avg">Media Nacional</p>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-2xl font-bold text-slate-800">84 <small class="text-sm font-normal"
+                                        data-i18n="days">días</small></span>
+                                <span class="text-xs text-slate-500 font-bold bg-slate-50 px-2 py-0.5 rounded-full"
+                                    data-i18n="stable">Estable</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2" data-i18n="spain-avg-text">Promedio en España</p>
+                        </div>
+                        <div
+                            class="bg-white p-6 rounded-3xl border border-slate-100 shadow-sm border-l-4 border-l-red-500 text-left">
+                            <p class="text-slate-500 text-sm font-medium mb-1" data-i18n="stat-max-wait">Máxima Espera
+                            </p>
+                            <div class="flex items-baseline gap-2">
+                                <span class="text-2xl font-bold text-slate-800">145 <small class="text-sm font-normal"
+                                        data-i18n="days">días</small></span>
+                                <span
+                                    class="text-xs text-red-600 font-bold bg-red-50 px-2 py-0.5 rounded-full">+12%</span>
+                            </div>
+                            <p class="text-xs text-slate-400 mt-2" data-i18n="hosp-lapaz-full">Hosp. La Paz (Madrid)</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Comparison List Column -->
+                <div class="space-y-6">
+                    <div
+                        class="bg-white p-6 rounded-3xl shadow-lg shadow-slate-200/50 border border-slate-100 h-full flex flex-col">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-slate-800 text-lg" data-i18n="comp-title">Comparador Directo</h3>
+                            <button class="text-blue-600 text-sm font-semibold hover:underline" data-i18n="view-all">Ver
+                                todos</button>
+                        </div>
+
+                        <div id="hospital-list" class="space-y-4 flex-1">
+                            <!-- Items populated by JS -->
+                        </div>
+
+                        <div class="mt-8 pt-6 border-t border-slate-50">
+                            <button
+                                class="w-full bg-blue-600 text-white font-bold py-4 rounded-2xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 flex items-center justify-center gap-2">
+                                <i data-lucide="external-link" class="w-5 h-5"></i>
+                                <span data-i18n="btn-request">Solicitar Libre Elección</span>
+                            </button>
+                            <p class="text-center text-[10px] text-slate-400 mt-3 font-medium px-4"
+                                data-i18n="legal-disclaimer">
+                                El derecho a la libre elección de centro está amparado por la Ley de Cohesión y Calidad
+                                del SNS.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        // Translations Dictionary
+        const translations = {
+            es: {
+                "nav-dashboard": "Dashboard",
+                "nav-map": "Mapa Nacional",
+                "nav-compare": "Comparar",
+                "nav-reports": "Informes",
+                "info-tag": "Información",
+                "info-text": "Datos actualizados al último informe del SNS (2025).",
+                "search-placeholder": "Busca un hospital o especialidad...",
+                "page-title": "Monitor de Listas de Espera",
+                "page-subtitle": "Visualiza y compara el tiempo de demora por centros.",
+                "days": "días",
+                "stat-min-wait": "Mínima Espera",
+                "stat-avg": "Media Nacional",
+                "stat-max-wait": "Máxima Espera",
+                "hosp-burgos-full": "Hosp. Universitario Burgos",
+                "hosp-lapaz-full": "Hosp. La Paz (Madrid)",
+                "spain-avg-text": "Promedio en España",
+                "stable": "Estable",
+                "comp-title": "Comparador Directo",
+                "view-all": "Ver todos",
+                "btn-request": "Solicitar Libre Elección",
+                "legal-disclaimer": "El derecho a la libre elección de centro está amparado por la Ley de Cohesión y Calidad del SNS.",
+                "hosp-burgos": "Hosp. Universitario Burgos",
+                "hosp-lapaz": "Hosp. La Paz",
+                "hosp-clinic": "Clínic Barcelona",
+                "hosp-lafe": "Hosp. La Fe",
+                "hosp-ramon": "Hosp. Ramón y Cajal",
+                "hosp-vall": "Vall d'Hebron",
+                "spec-trauma": "Traumatología",
+                "spec-ophthalmology": "Oftalmología",
+                "spec-cardio": "Cirugía Cardíaca",
+                "spec-dermo": "Dermatología",
+                "wait-label": "Espera"
+            },
+            en: {
+                "nav-dashboard": "Dashboard",
+                "nav-map": "National Map",
+                "nav-compare": "Compare",
+                "nav-reports": "Reports",
+                "info-tag": "Information",
+                "info-text": "Data updated to the latest SNS report (2025).",
+                "search-placeholder": "Search for a hospital or specialty...",
+                "page-title": "Waiting List Monitor",
+                "page-subtitle": "Visualize and compare delay times by centers.",
+                "days": "days",
+                "stat-min-wait": "Minimum Wait",
+                "stat-avg": "National Average",
+                "stat-max-wait": "Maximum Wait",
+                "hosp-burgos-full": "Burgos University Hospital",
+                "hosp-lapaz-full": "La Paz Hospital (Madrid)",
+                "spain-avg-text": "Spain Average",
+                "stable": "Stable",
+                "comp-title": "Direct Comparator",
+                "view-all": "View all",
+                "btn-request": "Request Center Choice",
+                "legal-disclaimer": "The right to free choice of center is protected by the SNS Cohesion and Quality Law.",
+                "hosp-burgos": "Burgos University Hospital",
+                "hosp-lapaz": "La Paz Hospital",
+                "hosp-clinic": "Clinic Hospital Barcelona",
+                "hosp-lafe": "La Fe Hospital",
+                "hosp-ramon": "Ramon y Cajal Hospital",
+                "hosp-vall": "Vall d'Hebron Hospital",
+                "spec-trauma": "Traumatology",
+                "spec-ophthalmology": "Ophthalmology",
+                "spec-cardio": "Cardiac Surgery",
+                "spec-dermo": "Dermatology",
+                "wait-label": "Wait"
+            }
+        };
+
+        let currentLang = localStorage.getItem('saniRadar_lang') || 'es';
+
+        function changeLang(lang) {
+            currentLang = lang;
+            localStorage.setItem('saniRadar_lang', lang);
+            updateUI();
+        }
+
+        // Lucide implementation
+        lucide.createIcons();
+
+        // Mock Data
+        const hospitals = [
+            { id: 1, nameKey: "hosp-burgos", city: "Burgos", lat: 42.3439, lng: -3.6969, wait: 12, trend: -2 },
+            { id: 2, nameKey: "hosp-lapaz", city: "Madrid", lat: 40.4819, lng: -3.6872, wait: 145, trend: 15 },
+            { id: 3, nameKey: "hosp-clinic", city: "Barcelona", lat: 41.3894, lng: 2.1528, wait: 68, trend: 5 },
+            { id: 4, nameKey: "hosp-lafe", city: "Valencia", lat: 39.4449, lng: -0.3754, wait: 92, trend: -1 },
+            { id: 5, nameKey: "hosp-ramon", city: "Madrid", lat: 40.4878, lng: -3.6917, wait: 110, trend: 8 },
+            { id: 6, nameKey: "hosp-vall", city: "Barcelona", lat: 41.4276, lng: 2.1432, wait: 75, trend: -3 }
+        ];
+
+        // Initialize Map
+        const map = L.map('map').setView([40.4168, -3.7038], 6);
+
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+            subdomains: 'abcd',
+            maxZoom: 20
+        }).addTo(map);
+
+        let activeMarkers = [];
+
+        // Populate markers and list
+        function updateUI() {
+            // Update Text
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.innerText = translations[currentLang][key] || key;
+            });
+
+            document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
+                const key = el.getAttribute('data-i18n-placeholder');
+                el.placeholder = translations[currentLang][key] || key;
+            });
+
+            // Update Lang Buttons
+            document.getElementById('lang-es').className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'es' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
+            document.getElementById('lang-en').className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'en' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
+
+            const listContainer = document.getElementById('hospital-list');
+            listContainer.innerHTML = '';
+
+            // Clear markers
+            activeMarkers.forEach(m => map.removeLayer(m));
+            activeMarkers = [];
+
+            hospitals.forEach(hosp => {
+                const hospName = translations[currentLang][hosp.nameKey];
+
+                // Determine color
+                let color = 'bg-green-500';
+                if (hosp.wait > 60) color = 'bg-yellow-500';
+                if (hosp.wait > 100) color = 'bg-red-500';
+
+                // Marker
+                const icon = L.divIcon({
+                    className: 'custom-div-icon',
+                    html: `<div class="custom-marker ${color} w-8 h-8">${hosp.wait}</div>`,
+                    iconSize: [32, 32],
+                    iconAnchor: [16, 16]
+                });
+
+                const marker = L.marker([hosp.lat, hosp.lng], { icon }).addTo(map)
+                    .bindPopup(`<b>${hospName}</b><br>${translations[currentLang]['wait-label']}: ${hosp.wait} ${translations[currentLang]['days']}`);
+                activeMarkers.push(marker);
+
+                // List Item
+                const trendIcon = hosp.trend > 0 ? 'trending-up' : 'trending-down';
+                const trendColor = hosp.trend > 0 ? 'text-red-500' : 'text-green-500';
+
+                const item = document.createElement('div');
+                item.className = 'group p-4 rounded-2xl bg-white border border-slate-50 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer text-left';
+                item.innerHTML = `
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h4 class="font-bold text-slate-800 text-sm group-hover:text-blue-600 transition-colors">${hospName}</h4>
+                            <p class="text-xs text-slate-400">${hosp.city}</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-lg font-bold ${hosp.wait > 100 ? 'text-red-600' : 'text-slate-800'}">${hosp.wait}d</span>
+                            <div class="flex items-center justify-end gap-1 ${trendColor}">
+                                <i data-lucide="${trendIcon}" class="w-3 h-3"></i>
+                                <span class="text-[10px] font-bold">${Math.abs(hosp.trend)}%</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+            lucide.createIcons();
+        }
+
+        updateUI();
+
+        // Event listeners
+        document.getElementById('spec-select').addEventListener('change', () => {
+            const msg = currentLang === 'es' ? 'Filtrando especialidad...' : 'Filtering specialty...';
+            console.log(msg);
+        });
+
+        document.getElementById('prov-select').addEventListener('change', (e) => {
+            const city = e.target.value;
+            const hosp = hospitals.find(h => h.city.toLowerCase() === city);
+            if (hosp) {
+                map.flyTo([hosp.lat, hosp.lng], 12);
+            }
+        });
+
+    </script>
+</body>
+
+</html>
