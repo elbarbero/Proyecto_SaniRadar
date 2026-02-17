@@ -47,14 +47,14 @@ def read_root():
 
 @app.get("/api/hospitals", response_model=List[Hospital])
 def get_hospitals(specialty: str = None, province: str = None):
-    results = HOSPITALS_DB
+    # Creamos una copia profunda para evitar mutar el "mock database" global
+    results = [h.copy() for h in HOSPITALS_DB]
     
     # Simple filtering logic
     if specialty and specialty != "all":
-        # In a real app, wait times vary by specialty. 
-        # Here we simulate it by slightly adjusting the mock wait time based on specialty
-        # Just to show it's dynamic
-        modifier = len(specialty) % 5
+        # Simulamos variaciones por especialidad de forma determinista para que no se acumulen
+        # Usamos el hash o la longitud para que el cambio sea consistente pero no mutativo
+        modifier = len(specialty) % 7
         for h in results:
             h["wait"] = h["wait"] + modifier
             
