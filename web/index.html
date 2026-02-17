@@ -165,10 +165,6 @@
                     <select id="spec-select"
                         class="bg-transparent border-none focus:ring-0 text-sm font-semibold text-slate-700 px-4 cursor-pointer">
                         <option value="all" data-i18n="spec-all">Todas las especialidades</option>
-                        <option value="trauma" data-i18n="spec-trauma">Traumatología</option>
-                        <option value="ophthalmology" data-i18n="spec-ophthalmology">Oftalmología</option>
-                        <option value="cardio" data-i18n="spec-cardio">Cirugía Cardíaca</option>
-                        <option value="dermo" data-i18n="spec-dermo">Dermatología</option>
                     </select>
                     <div class="w-px h-6 bg-slate-200 my-auto"></div>
                     <select id="prov-select"
@@ -287,135 +283,202 @@
         // Translations Dictionary
         const translations = {
             es: {
-                "nav-dashboard": "Dashboard",
-                "nav-map": "Mapa Nacional",
-                "nav-compare": "Comparar",
-                "nav-reports": "Informes",
-                "info-tag": "Información",
-                "info-text": "Datos actualizados al último informe del SNS (2025).",
-                "search-placeholder": "Busca un hospital o especialidad...",
-                "page-title": "Monitor de Listas de Espera",
-                "page-subtitle": "Visualiza y compara el tiempo de demora por centros.",
-                "days": "días",
-                "stat-min-wait": "Mínima Espera",
-                "stat-avg": "Media Nacional",
-                "stat-max-wait": "Máxima Espera",
-                "hosp-burgos-full": "Hosp. Universitario Burgos",
-                "hosp-lapaz-full": "Hosp. La Paz (Madrid)",
-                "spain-avg-text": "Promedio en España",
-                "stable": "Estable",
-                "comp-title": "Comparador Directo",
-                "view-all": "Ver todos",
-                "btn-request": "Solicitar Libre Elección",
-                "legal-disclaimer": "El derecho a la libre elección de centro está amparado por la Ley de Cohesión y Calidad del SNS.",
-                "hosp-burgos": "Hosp. Universitario Burgos",
-                "chart-title": "Evolución de la Espera (Meses)",
-                "hosp-lapaz": "Hosp. La Paz",
-                "hosp-clinic": "Clínic Barcelona",
-                "hosp-lafe": "Hosp. La Fe",
-                "hosp-ramon": "Hosp. Ramón y Cajal",
-                "hosp-vall": "Vall d'Hebron",
+                "nav-dashboard": "Dashboard", "nav-map": "Mapa Nacional", "nav-compare": "Comparar", "nav-reports": "Informes",
+                "info-tag": "Información", "info-text": "Datos actualizados al último informe del SNS (2025).",
+                "search-placeholder": "Busca un hospital o especialidad...", "page-title": "Monitor de Listas de Espera",
+                "page-subtitle": "Visualiza y compara el tiempo de demora por centros.", "days": "días",
+                "stat-min-wait": "Mínima Espera", "stat-avg": "Media Nacional", "stat-max-wait": "Máxima Espera",
+                "hosp-burgos-full": "Hosp. Universitario Burgos", "hosp-lapaz-full": "Hosp. La Paz (Madrid)",
+                "spain-avg-text": "Promedio en España", "stable": "Estable", "comp-title": "Comparador Directo",
+                "view-all": "Ver todos", "btn-request": "Solicitar Libre Elección", "chart-title": "Evolución de la Espera (Meses)",
                 "spec-all": "Todas las especialidades",
-                "spec-trauma": "Traumatología",
+                "spec-allergy": "Alergología",
+                "spec-pathology": "Anatomía Patológica",
+                "spec-anesthesia": "Anestesiología y Reanimación",
+                "spec-angiology": "Angiología y Cirugía Vascular",
+                "spec-digestive": "Aparato Digestivo",
+                "spec-cardio": "Cardiología",
+                "spec-cardiovascular-surgery": "Cirugía Cardiovascular",
+                "spec-general-surgery": "Cirugía General y del Aparato Digestivo",
+                "spec-maxillofacial": "Cirugía Oral y Maxilofacial",
+                "spec-trauma": "Cirugía Ortopédica y Traumatología",
+                "spec-pediatric-surgery": "Cirugía Pediátrica",
+                "spec-plastic": "Cirugía Plástica, Estética y Reparadora",
+                "spec-thoracic": "Cirugía Torácica",
+                "spec-dermo": "Dermatología y Venereología",
+                "spec-endocrinology": "Endocrinología y Nutrición",
+                "spec-pharmacology": "Farmacología Clínica",
+                "spec-geriatrics": "Geriatría",
+                "spec-hematology": "Hematología y Hemoterapia",
+                "spec-immunology": "Inmunología",
+                "spec-occupational-medicine": "Medicina del Trabajo",
+                "spec-family-medicine": "Medicina Familiar y Comunitaria",
+                "spec-rehab": "Medicina Física y Rehabilitación",
+                "spec-intensive-care": "Medicina Intensiva",
+                "spec-internal-medicine": "Medicina Interna",
+                "spec-forensic": "Medicina Legal y Forense",
+                "spec-nuclear-medicine": "Medicina Nuclear",
+                "spec-preventive": "Medicina Preventiva y Salud Pública",
+                "spec-nephrology": "Nefrología",
+                "spec-pneumology": "Neumología",
+                "spec-neurosurgery": "Neurocirugía",
+                "spec-neurophysiology": "Neurofisiología Clínica",
+                "spec-neurology": "Neurología",
+                "spec-gyn": "Obstetricia y Ginecología",
                 "spec-ophthalmology": "Oftalmología",
-                "spec-cardio": "Cirugía Cardíaca",
-                "spec-dermo": "Dermatología",
-                "all-provinces": "Todas las provincias",
-                "wait-label": "Espera"
+                "spec-medical-oncology": "Oncología Médica",
+                "spec-radiation-oncology": "Oncología Radioterápica",
+                "spec-ent": "Otorrinolaringología",
+                "spec-pediatrics": "Pediatría",
+                "spec-psychiatry": "Psiquiatría",
+                "spec-radiology": "Radiodiagnóstico",
+                "spec-rheumatology": "Reumatología",
+                "spec-urology": "Urología",
+                "all-provinces": "Todas las provincias", "wait-label": "Espera"
             },
             en: {
-                "nav-dashboard": "Dashboard",
-                "nav-map": "National Map",
-                "nav-compare": "Compare",
-                "nav-reports": "Reports",
-                "info-tag": "Information",
-                "info-text": "Data updated to the latest SNS report (2025).",
-                "search-placeholder": "Search for a hospital or specialty...",
-                "page-title": "Waiting List Monitor",
-                "page-subtitle": "Visualize and compare delay times by centers.",
-                "days": "days",
-                "stat-min-wait": "Minimum Wait",
-                "stat-avg": "National Average",
-                "stat-max-wait": "Maximum Wait",
-                "hosp-burgos-full": "Burgos University Hospital",
-                "hosp-lapaz-full": "La Paz Hospital (Madrid)",
-                "spain-avg-text": "Spain Average",
-                "stable": "Stable",
-                "comp-title": "Direct Comparator",
-                "view-all": "View all",
-                "btn-request": "Request Center Choice",
-                "legal-disclaimer": "The right to free choice of center is protected by the SNS Cohesion and Quality Law.",
-                "hosp-burgos": "Burgos University Hospital",
-                "chart-title": "Wait Time Evolution (Months)",
-                "hosp-lapaz": "La Paz Hospital",
-                "hosp-clinic": "Clinic Hospital Barcelona",
-                "hosp-lafe": "La Fe Hospital",
-                "hosp-ramon": "Ramon y Cajal Hospital",
-                "hosp-vall": "Vall d'Hebron Hospital",
+                "nav-dashboard": "Dashboard", "nav-map": "National Map", "nav-compare": "Compare", "nav-reports": "Reports",
+                "info-tag": "Information", "info-text": "Data updated to the latest SNS report (2025).",
+                "search-placeholder": "Search for a hospital or specialty...", "page-title": "Waiting List Monitor",
+                "page-subtitle": "Visualize and compare delay times by centers.", "days": "days",
+                "stat-min-wait": "Minimum Wait", "stat-avg": "National Average", "stat-max-wait": "Maximum Wait",
+                "hosp-burgos-full": "Burgos University Hospital", "hosp-lapaz-full": "La Paz Hospital (Madrid)",
+                "spain-avg-text": "Spain Average", "stable": "Stable", "comp-title": "Direct Comparator",
+                "view-all": "View all", "btn-request": "Request Center Choice", "chart-title": "Wait Time Evolution (Months)",
                 "spec-all": "All Specialities",
-                "spec-trauma": "Traumatology",
+                "spec-allergy": "Allergology",
+                "spec-pathology": "Pathological Anatomy",
+                "spec-anesthesia": "Anesthesiology and Resuscitation",
+                "spec-angiology": "Angiology and Vascular Surgery",
+                "spec-digestive": "Digestive System",
+                "spec-cardio": "Cardiology",
+                "spec-cardiovascular-surgery": "Cardiovascular Surgery",
+                "spec-general-surgery": "General and Digestive Surgery",
+                "spec-maxillofacial": "Oral and Maxillofacial Surgery",
+                "spec-trauma": "Orthopedic Surgery and Traumatology",
+                "spec-pediatric-surgery": "Pediatric Surgery",
+                "spec-plastic": "Plastic and Reconstructive Surgery",
+                "spec-thoracic": "Thoracic Surgery",
+                "spec-dermo": "Dermatology and Venereology",
+                "spec-endocrinology": "Endocrinology and Nutrition",
+                "spec-pharmacology": "Clinical Pharmacology",
+                "spec-geriatrics": "Geriatrics",
+                "spec-hematology": "Hematology and Hemotherapy",
+                "spec-immunology": "Immunology",
+                "spec-occupational-medicine": "Occupational Medicine",
+                "spec-family-medicine": "Family and Community Medicine",
+                "spec-rehab": "Physical Medicine and Rehabilitation",
+                "spec-intensive-care": "Intensive Care Medicine",
+                "spec-internal-medicine": "Internal Medicine",
+                "spec-forensic": "Forensic Medicine",
+                "spec-nuclear-medicine": "Nuclear Medicine",
+                "spec-preventive": "Preventive Medicine and Public Health",
+                "spec-nephrology": "Nephrology",
+                "spec-pneumology": "Pneumology",
+                "spec-neurosurgery": "Neurosurgery",
+                "spec-neurophysiology": "Clinical Neurophysiology",
+                "spec-neurology": "Neurology",
+                "spec-gyn": "Obstetrics and Gynecology",
                 "spec-ophthalmology": "Ophthalmology",
-                "spec-cardio": "Cardiac Surgery",
-                "spec-dermo": "Dermatology",
-                "all-provinces": "All Provinces",
-                "wait-label": "Wait"
+                "spec-medical-oncology": "Medical Oncology",
+                "spec-radiation-oncology": "Radiation Oncology",
+                "spec-ent": "Otolaryngology (ENT)",
+                "spec-pediatrics": "Pediatrics",
+                "spec-psychiatry": "Psychiatry",
+                "spec-radiology": "Radiodiagnosis",
+                "spec-rheumatology": "Rheumatology",
+                "spec-urology": "Urology",
+                "all-provinces": "All Provinces", "wait-label": "Wait"
             }
         };
 
         let currentLang = localStorage.getItem('saniRadar_lang') || 'es';
+        let allHospitalsData = [];
+        let trendChart;
 
         function changeLang(lang) {
             currentLang = lang;
             localStorage.setItem('saniRadar_lang', lang);
             updateUI();
+            updateStats();
         }
 
-        // Lucide implementation
         lucide.createIcons();
 
-        // Mock Data
-        const hospitals = [
-            { id: 1, nameKey: "hosp-burgos", city: "Burgos", lat: 42.3439, lng: -3.6969, wait: 12, trend: -2 },
-            { id: 2, nameKey: "hosp-lapaz", city: "Madrid", lat: 40.4819, lng: -3.6872, wait: 145, trend: 15 },
-            { id: 3, nameKey: "hosp-clinic", city: "Barcelona", lat: 41.3894, lng: 2.1528, wait: 68, trend: 5 },
-            { id: 4, nameKey: "hosp-lafe", city: "Valencia", lat: 39.4449, lng: -0.3754, wait: 92, trend: -1 },
-            { id: 5, nameKey: "hosp-ramon", city: "Madrid", lat: 40.4878, lng: -3.6917, wait: 110, trend: 8 },
-            { id: 6, nameKey: "hosp-vall", city: "Barcelona", lat: 41.4276, lng: 2.1432, wait: 75, trend: -3 }
-        ];
-
-        // Initialize Map
         const map = L.map('map').setView([40.4168, -3.7038], 6);
-
         L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
+            attribution: '&copy; OpenStreetMap',
             subdomains: 'abcd',
             maxZoom: 20
         }).addTo(map);
 
         let activeMarkers = [];
 
-        // Populate markers and list
-        async function updateUI() {
-            let data = hospitals; // Fallback to mock
+        async function updateStats() {
+            try {
+                const response = await fetch('http://localhost:8000/api/stats');
+                if (response.ok) {
+                    const stats = await response.json();
 
+                    // Update Stat Cards
+                    const updateCard = (id, hosp, val, isAvg = false) => {
+                        const card = document.querySelector(`#${id}`).parentElement;
+                        const nameEl = card.querySelector('.text-xs');
+                        const valEl = card.querySelector('.text-2xl');
+
+                        if (hosp) {
+                            nameEl.innerText = currentLang === 'es' ? hosp.name_es : hosp.name_en;
+                            valEl.innerHTML = `${hosp.wait} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
+                        } else if (isAvg) {
+                            valEl.innerHTML = `${val} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
+                        }
+                    };
+
+                    updateCard('api-status-dot', stats.min_hosp, null); // Reusing ID for search context
+                    // Note: In index.html, these don't have unique IDs inside markers, I will add IDs to indicators in the HTML next or use nth-child
+                    const statCards = document.querySelectorAll('main section .grid .bg-white.p-6');
+                    if (statCards.length >= 3) {
+                        // Min Wait
+                        statCards[0].querySelector('.text-2xl').innerHTML = `${stats.min_hosp.wait} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
+                        statCards[0].querySelector('.text-xs').innerText = currentLang === 'es' ? stats.min_hosp.name_es : stats.min_hosp.name_en;
+
+                        // Avg
+                        statCards[1].querySelector('.text-2xl').innerHTML = `${stats.avg} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
+
+                        // Max Wait
+                        statCards[2].querySelector('.text-2xl').innerHTML = `${stats.max_hosp.wait} <small class="text-sm font-normal">${translations[currentLang]['days']}</small>`;
+                        statCards[2].querySelector('.text-xs').innerText = currentLang === 'es' ? stats.max_hosp.name_es : stats.max_hosp.name_en;
+                    }
+                }
+            } catch (e) { console.error("Stats fetch failed", e); }
+        }
+
+        async function updateUI() {
             const specialty = document.getElementById('spec-select').value;
             const province = document.getElementById('prov-select').value;
+            const searchQuery = document.getElementById('main-search').value.toLowerCase();
 
             try {
                 const url = `http://localhost:8000/api/hospitals?specialty=${specialty}&province=${province}`;
                 const response = await fetch(url);
                 if (response.ok) {
-                    data = await response.json();
+                    allHospitalsData = await response.json();
                     document.getElementById('api-status').innerText = 'Connected: FastAPI + SQL';
                     document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
                 }
             } catch (e) {
-                console.log("API not reached, using local fallback data.");
                 document.getElementById('api-status').innerText = 'Local Sandbox Mode';
                 document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-slate-300';
             }
 
-            // Update Text
+            // Filtering by search term locally
+            const filteredData = allHospitalsData.filter(h => {
+                const name = (currentLang === 'es' ? h.name_es : h.name_en).toLowerCase();
+                const city = h.city.toLowerCase();
+                return name.includes(searchQuery) || city.includes(searchQuery);
+            });
+
+            // Update Translations
             document.querySelectorAll('[data-i18n]').forEach(el => {
                 const key = el.getAttribute('data-i18n');
                 el.innerText = translations[currentLang][key] || key;
@@ -426,44 +489,31 @@
                 el.placeholder = translations[currentLang][key] || key;
             });
 
-            // Update Lang Buttons
             document.getElementById('lang-es').className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'es' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
             document.getElementById('lang-en').className = `px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${currentLang === 'en' ? 'bg-white shadow-sm text-blue-600' : 'text-slate-500 hover:bg-white/50'}`;
 
             const listContainer = document.getElementById('hospital-list');
             listContainer.innerHTML = '';
-
-            // Clear markers
             activeMarkers.forEach(m => map.removeLayer(m));
             activeMarkers = [];
 
-            data.forEach(hosp => {
-                // Determine name based on locale
-                const hospName = currentLang === 'es' ? (hosp.name_es || translations[currentLang][hosp.nameKey]) : (hosp.name_en || translations[currentLang][hosp.nameKey]);
+            filteredData.forEach(hosp => {
+                const hospName = currentLang === 'es' ? hosp.name_es : hosp.name_en;
+                let color = hosp.wait > 100 ? 'bg-red-500' : (hosp.wait > 60 ? 'bg-yellow-500' : 'bg-green-500');
 
-                // Determine color
-                let color = 'bg-green-500';
-                if (hosp.wait > 60) color = 'bg-yellow-500';
-                if (hosp.wait > 100) color = 'bg-red-500';
-
-                // Marker
                 const icon = L.divIcon({
                     className: 'custom-div-icon',
-                    html: `<div class="custom-marker ${color} w-8 h-8">${hosp.wait}</div>`,
-                    iconSize: [32, 32],
-                    iconAnchor: [16, 16]
+                    html: `<div class="custom-marker ${color} w-8 h-8 transition-all hover:scale-125">${hosp.wait}</div>`,
+                    iconSize: [32, 32], iconAnchor: [16, 16]
                 });
 
                 const marker = L.marker([hosp.lat, hosp.lng], { icon }).addTo(map)
                     .bindPopup(`<b>${hospName}</b><br>${translations[currentLang]['wait-label']}: ${hosp.wait} ${translations[currentLang]['days']}`);
                 activeMarkers.push(marker);
 
-                // List Item
-                const trendIcon = hosp.trend > 0 ? 'trending-up' : 'trending-down';
-                const trendColor = hosp.trend > 0 ? 'text-red-500' : 'text-green-500';
-
                 const item = document.createElement('div');
                 item.className = 'group p-4 rounded-2xl bg-white border border-slate-50 hover:border-blue-200 hover:shadow-md transition-all cursor-pointer text-left';
+                item.onclick = () => { map.flyTo([hosp.lat, hosp.lng], 12); marker.openPopup(); };
                 item.innerHTML = `
                     <div class="flex justify-between items-start">
                         <div>
@@ -472,8 +522,8 @@
                         </div>
                         <div class="text-right">
                             <span class="text-lg font-bold ${hosp.wait > 100 ? 'text-red-600' : 'text-slate-800'}">${hosp.wait}d</span>
-                            <div class="flex items-center justify-end gap-1 ${trendColor}">
-                                <i data-lucide="${trendIcon}" class="w-3 h-3"></i>
+                            <div class="flex items-center justify-end gap-1 ${hosp.trend > 0 ? 'text-red-500' : 'text-green-500'}">
+                                <i data-lucide="${hosp.trend > 0 ? 'trending-up' : 'trending-down'}" class="w-3 h-3"></i>
                                 <span class="text-[10px] font-bold">${Math.abs(hosp.trend)}%</span>
                             </div>
                         </div>
@@ -482,94 +532,85 @@
                 listContainer.appendChild(item);
             });
             lucide.createIcons();
+
+            // Randomize chart data for effect
+            if (trendChart) {
+                trendChart.data.datasets[0].data = trendChart.data.datasets[0].data.map(v => v + (Math.random() - 0.5) * 5);
+                trendChart.update();
+            }
         }
 
-        updateUI();
-
-        // Initialize Trend Chart
         const ctx = document.getElementById('trendChart').getContext('2d');
-        const trendChart = new Chart(ctx, {
+        trendChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
                 datasets: [{
-                    label: '2024',
-                    data: [82, 85, 80, 88, 92, 84],
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    fill: true,
-                    tension: 0.4,
-                    borderWidth: 3,
-                    pointRadius: 0
+                    label: '2024', data: [82, 85, 80, 88, 92, 84],
+                    borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true, tension: 0.4, borderWidth: 3, pointRadius: 0
                 }, {
-                    label: '2025',
-                    data: [85, 88, 75, 70, 68, 65],
-                    borderColor: '#c7d2fe',
-                    borderDash: [5, 5],
-                    tension: 0.4,
-                    borderWidth: 2,
-                    pointRadius: 0
+                    label: '2025', data: [85, 88, 75, 70, 68, 65],
+                    borderColor: '#c7d2fe', borderDash: [5, 5], tension: 0.4, borderWidth: 2, pointRadius: 0
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 plugins: { legend: { display: false } },
                 scales: {
-                    y: {
-                        beginAtZero: false,
-                        grid: { display: false },
-                        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
-                    },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
-                    }
+                    y: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' } },
+                    x: { grid: { display: false }, ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' } }
                 }
             }
         });
 
-        // Initial load
         async function initialize() {
+            // Populate Specialties
+            try {
+                const specResp = await fetch('http://localhost:8000/api/specialties');
+                if (specResp.ok) {
+                    const specialties = await specResp.json();
+                    const specSelect = document.getElementById('spec-select');
+                    specSelect.innerHTML = `<option value="all" data-i18n="spec-all">${translations[currentLang]['spec-all']}</option>`;
+                    specialties.forEach(s => {
+                        const opt = document.createElement('option');
+                        opt.value = s.id;
+                        opt.innerText = translations[currentLang][s.key] || s.id;
+                        specSelect.appendChild(opt);
+                    });
+                }
+            } catch (e) { console.log("Specialties API fail"); }
+
             // Populate Provinces
             try {
                 const response = await fetch('http://localhost:8000/api/provinces');
                 if (response.ok) {
                     const provinces = await response.json();
                     const provSelect = document.getElementById('prov-select');
-                    provSelect.innerHTML = `<option value="all" data-i18n="all-provinces">${translations[currentLang]['all-provinces']}</option>`;
+                    provSelect.innerHTML = `<option value="all" data-i18n="all-provinces">${translations[currentLang]['all-provinces'] || 'Todas las provincias'}</option>`;
                     provinces.forEach(p => {
                         const opt = document.createElement('option');
-                        opt.value = p;
-                        opt.innerText = p;
+                        opt.value = p; opt.innerText = p;
                         provSelect.appendChild(opt);
                     });
                 }
-            } catch (e) {
-                console.log("Could not load provinces from API.");
-            }
-
+            } catch (e) { console.log("Provinces API fail"); }
             updateUI();
+            updateStats();
         }
 
         initialize();
 
-        // Event listeners
-        document.getElementById('spec-select').addEventListener('change', () => {
-            updateUI();
-        });
-
-        document.getElementById('prov-select').addEventListener('change', (e) => {
-            updateUI();
-        });
-
+        document.getElementById('spec-select').addEventListener('change', updateUI);
+        document.getElementById('prov-select').addEventListener('change', updateUI);
+        document.getElementById('main-search').addEventListener('input', updateUI);
         document.getElementById('view-all-btn').addEventListener('click', () => {
             document.getElementById('spec-select').value = 'all';
             document.getElementById('prov-select').value = 'all';
+            document.getElementById('main-search').value = '';
             updateUI();
             map.flyTo([40.4168, -3.7038], 6);
         });
-
     </script>
 </body>
 

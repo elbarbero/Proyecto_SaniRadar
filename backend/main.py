@@ -44,6 +44,55 @@ PROVINCES = [
     "Valladolid", "Vizcaya", "Zamora", "Zaragoza", "Ceuta", "Melilla"
 ]
 
+SPECIALTIES = [
+    {"id": "allergy", "key": "spec-allergy"},
+    {"id": "pathology", "key": "spec-pathology"},
+    {"id": "anesthesia", "key": "spec-anesthesia"},
+    {"id": "angiology", "key": "spec-angiology"},
+    {"id": "digestive", "key": "spec-digestive"},
+    {"id": "cardio", "key": "spec-cardio"},
+    {"id": "cardiovascular-surgery", "key": "spec-cardiovascular-surgery"},
+    {"id": "general-surgery", "key": "spec-general-surgery"},
+    {"id": "maxillofacial", "key": "spec-maxillofacial"},
+    {"id": "trauma", "key": "spec-trauma"},
+    {"id": "pediatric-surgery", "key": "spec-pediatric-surgery"},
+    {"id": "plastic", "key": "spec-plastic"},
+    {"id": "thoracic", "key": "spec-thoracic"},
+    {"id": "dermo", "key": "spec-dermo"},
+    {"id": "endocrinology", "key": "spec-endocrinology"},
+    {"id": "pharmacology", "key": "spec-pharmacology"},
+    {"id": "geriatrics", "key": "spec-geriatrics"},
+    {"id": "hematology", "key": "spec-hematology"},
+    {"id": "immunology", "key": "spec-immunology"},
+    {"id": "occupational-medicine", "key": "spec-occupational-medicine"},
+    {"id": "family-medicine", "key": "spec-family-medicine"},
+    {"id": "rehab", "key": "spec-rehab"},
+    {"id": "intensive-care", "key": "spec-intensive-care"},
+    {"id": "internal-medicine", "key": "spec-internal-medicine"},
+    {"id": "forensic", "key": "spec-forensic"},
+    {"id": "nuclear-medicine", "key": "spec-nuclear-medicine"},
+    {"id": "preventive", "key": "spec-preventive"},
+    {"id": "nephrology", "key": "spec-nephrology"},
+    {"id": "pneumology", "key": "spec-pneumology"},
+    {"id": "neurosurgery", "key": "spec-neurosurgery"},
+    {"id": "neurophysiology", "key": "spec-neurophysiology"},
+    {"id": "neurology", "key": "spec-neurology"},
+    {"id": "gyn", "key": "spec-gyn"},
+    {"id": "ophthalmology", "key": "spec-ophthalmology"},
+    {"id": "medical-oncology", "key": "spec-medical-oncology"},
+    {"id": "radiation-oncology", "key": "spec-radiation-oncology"},
+    {"id": "ent", "key": "spec-ent"},
+    {"id": "pediatrics", "key": "spec-pediatrics"},
+    {"id": "psychiatry", "key": "spec-psychiatry"},
+    {"id": "radiology", "key": "spec-radiology"},
+    {"id": "rheumatology", "key": "spec-rheumatology"},
+    {"id": "urology", "key": "spec-urology"}
+]
+
+@app.get("/api/specialties")
+def get_specialties():
+    return SPECIALTIES
+
 @app.on_event("startup")
 def on_startup():
     create_db_and_tables()
@@ -202,13 +251,16 @@ def get_stats(session: Session = Depends(get_session)):
     statement = select(Hospital)
     hospitals = session.exec(statement).all()
     if not hospitals:
-        return {"min": 0, "avg": 0, "max": 0}
+        return {"min_hosp": None, "avg": 0, "max_hosp": None}
         
-    waits = [h.wait for h in hospitals]
+    min_hosp = min(hospitals, key=lambda h: h.wait)
+    max_hosp = max(hospitals, key=lambda h: h.wait)
+    avg_wait = sum(h.wait for h in hospitals) / len(hospitals)
+    
     return {
-        "min": min(waits),
-        "avg": sum(waits) / len(waits),
-        "max": max(waits)
+        "min_hosp": min_hosp,
+        "avg": round(avg_wait, 1),
+        "max_hosp": max_hosp
     }
 
 if __name__ == "__main__":
