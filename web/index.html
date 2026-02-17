@@ -13,6 +13,8 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -125,6 +127,13 @@
             </div>
 
             <div class="flex items-center gap-4">
+                <!-- API Status -->
+                <div class="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
+                    <div id="api-status-dot" class="w-2 h-2 rounded-full bg-slate-300"></div>
+                    <span id="api-status" class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Local
+                        Sandbox</span>
+                </div>
+
                 <!-- Language Selector -->
                 <div class="flex bg-slate-100 p-1 rounded-xl">
                     <button onclick="changeLang('es')" id="lang-es"
@@ -218,6 +227,25 @@
                             <p class="text-xs text-slate-400 mt-2" data-i18n="hosp-lapaz-full">Hosp. La Paz (Madrid)</p>
                         </div>
                     </div>
+
+                    <!-- Trend Chart -->
+                    <div class="bg-white p-8 rounded-3xl border border-slate-100 shadow-sm">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-slate-800 text-lg" data-i18n="chart-title">Evolución de la Espera
+                                (Meses)</h3>
+                            <div class="flex gap-2">
+                                <span class="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                    <div class="w-2 h-2 rounded-full bg-blue-500"></div> 2024
+                                </span>
+                                <span class="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                                    <div class="w-2 h-2 rounded-full bg-indigo-200"></div> 2025
+                                </span>
+                            </div>
+                        </div>
+                        <div class="h-64">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Comparison List Column -->
@@ -280,6 +308,7 @@
                 "btn-request": "Solicitar Libre Elección",
                 "legal-disclaimer": "El derecho a la libre elección de centro está amparado por la Ley de Cohesión y Calidad del SNS.",
                 "hosp-burgos": "Hosp. Universitario Burgos",
+                "chart-title": "Evolución de la Espera (Meses)",
                 "hosp-lapaz": "Hosp. La Paz",
                 "hosp-clinic": "Clínic Barcelona",
                 "hosp-lafe": "Hosp. La Fe",
@@ -314,6 +343,7 @@
                 "btn-request": "Request Center Choice",
                 "legal-disclaimer": "The right to free choice of center is protected by the SNS Cohesion and Quality Law.",
                 "hosp-burgos": "Burgos University Hospital",
+                "chart-title": "Wait Time Evolution (Months)",
                 "hosp-lapaz": "La Paz Hospital",
                 "hosp-clinic": "Clinic Hospital Barcelona",
                 "hosp-lafe": "La Fe Hospital",
@@ -363,13 +393,21 @@
         async function updateUI() {
             let data = hospitals; // Fallback to mock
 
+            const specialty = document.getElementById('spec-select').value;
+            const province = document.getElementById('prov-select').value;
+
             try {
-                const response = await fetch('http://localhost:8000/api/hospitals');
+                const url = `http://localhost:8000/api/hospitals?specialty=${specialty}&province=${province}`;
+                const response = await fetch(url);
                 if (response.ok) {
                     data = await response.json();
+                    document.getElementById('api-status').innerText = 'Connected: FastAPI + SQL';
+                    document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,0.6)]';
                 }
             } catch (e) {
                 console.log("API not reached, using local fallback data.");
+                document.getElementById('api-status').innerText = 'Local Sandbox Mode';
+                document.getElementById('api-status-dot').className = 'w-2 h-2 rounded-full bg-slate-300';
             }
 
             // Update Text
@@ -443,18 +481,64 @@
 
         updateUI();
 
+        // Initialize Trend Chart
+        const ctx = document.getElementById('trendChart').getContext('2d');
+        const trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun'],
+                datasets: [{
+                    label: '2024',
+                    data: [82, 85, 80, 88, 92, 84],
+                    borderColor: '#3b82f6',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    borderWidth: 3,
+                    pointRadius: 0
+                }, {
+                    label: '2025',
+                    data: [85, 88, 75, 70, 68, 65],
+                    borderColor: '#c7d2fe',
+                    borderDash: [5, 5],
+                    tension: 0.4,
+                    borderWidth: 2,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        grid: { display: false },
+                        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { size: 10, weight: 'bold' }, color: '#94a3b8' }
+                    }
+                }
+            }
+        });
+
         // Event listeners
         document.getElementById('spec-select').addEventListener('change', () => {
-            const msg = currentLang === 'es' ? 'Filtrando especialidad...' : 'Filtering specialty...';
-            console.log(msg);
+            updateUI();
         });
 
         document.getElementById('prov-select').addEventListener('change', (e) => {
             const city = e.target.value;
-            const hosp = hospitals.find(h => h.city.toLowerCase() === city);
-            if (hosp) {
-                map.flyTo([hosp.lat, hosp.lng], 12);
-            }
+            // First update list/data from server
+            updateUI().then(() => {
+                // Then fly to location if it exists in current data
+                const hosp = hospitals.find(h => h.city.toLowerCase() === city);
+                if (hosp) {
+                    map.flyTo([hosp.lat, hosp.lng], 12);
+                }
+            });
         });
 
     </script>
